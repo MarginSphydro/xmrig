@@ -6,6 +6,8 @@
 
 give me money if u like :3
 
+XMR 47aebK8oCFsiCEb9dnhzDkLgLNB1Qj6RUUGwdxLdmGE7Pcpn27xz9W1T1FK8Mvd1yw3CV9TTWpJP2jjiZCvKEAJHJFSwAVG
+
 TRON TUEvQhBgy7WQujayBbKgRc2c7PPW7hvXbs
 
 BSC 0x8920c1abb6c007de131cf427c1e23f55bb2c6bf1
