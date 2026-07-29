@@ -20,24 +20,15 @@ jobs:
           - name: linux-x64
             os: ubuntu-latest
             artifact: xmrig-linux-x64
-            binary: xmrig-notls
+            executable: xmrig-notls
           - name: macos-x64
             os: macos-13
             artifact: xmrig-macos-x64
-            binary: xmrig-notls
+            executable: xmrig-notls
           - name: windows-x64
             os: windows-latest
             artifact: xmrig-windows-x64
-            binary: xmrig-notls.exe
-            binary: xmrig
-          - name: macos-x64
-            os: macos-13
-            artifact: xmrig-macos-x64
-            binary: xmrig
-          - name: windows-x64
-            os: windows-latest
-            artifact: xmrig-windows-x64
-            binary: xmrig.exe
+            executable: xmrig-notls.exe
 
     steps:
       - name: Checkout
@@ -98,8 +89,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifact | Out-Null
-          $binary = Get-ChildItem -Path build -Recurse -File -Filter '${{ matrix.binary }}' | Select-Object -First 1
-          if (-not $binary) { throw "Binary ${{ matrix.binary }} was not found under build" }
+          $binary = Get-ChildItem -Path build -Recurse -File -Filter '${{ matrix.executable }}' | Select-Object -First 1
+          if (-not $binary) { throw "Binary ${{ matrix.executable }} was not found under build" }
           Copy-Item $binary.FullName -Destination artifact/
           Copy-Item README.md -Destination artifact/
           Copy-Item LICENSE -Destination artifact/ -ErrorAction SilentlyContinue
