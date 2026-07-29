@@ -1,0 +1,103 @@
+name: Build artifacts
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-latest
+            artifact: xmrig-linux-x64
+            binary: xmrig
+          - name: macos-x64
+            os: macos-13
+            artifact: xmrig-macos-x64
+            binary: xmrig
+          - name: windows-x64
+            os: windows-latest
+            artifact: xmrig-windows-x64
+            binary: xmrig.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libuv1-dev
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install libuv
+
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          vcpkg install libuv:x64-windows
+
+      - name: Configure Linux
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DWITH_TLS=OFF -DWITH_HWLOC=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF
+
+      - name: Configure macOS
+        if: runner.os == 'macOS'
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DWITH_TLS=OFF \
+            -DWITH_HWLOC=OFF \
+            -DWITH_OPENCL=OFF \
+            -DWITH_CUDA=OFF \
+            -DUV_INCLUDE_DIR="$(brew --prefix libuv)/include" \
+            -DUV_LIBRARY="$(brew --prefix libuv)/lib/libuv.a"
+
+      - name: Configure Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S . -B build `
+            -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DWITH_TLS=OFF `
+            -DWITH_HWLOC=OFF `
+            -DWITH_OPENCL=OFF `
+            -DWITH_CUDA=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Stage artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          $binary = Get-ChildItem -Path build -Recurse -File -Filter '${{ matrix.binary }}' | Select-Object -First 1
+          if (-not $binary) { throw "Binary ${{ matrix.binary }} was not found under build" }
+          Copy-Item $binary.FullName -Destination artifact/
+          Copy-Item README.md -Destination artifact/
+          Copy-Item LICENSE -Destination artifact/ -ErrorAction SilentlyContinue
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifact/*
+          if-no-files-found: error
