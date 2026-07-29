@@ -29,6 +29,15 @@ jobs:
             os: windows-latest
             artifact: xmrig-windows-x64
             binary: xmrig-notls.exe
+            binary: xmrig
+          - name: macos-x64
+            os: macos-13
+            artifact: xmrig-macos-x64
+            binary: xmrig
+          - name: windows-x64
+            os: windows-latest
+            artifact: xmrig-windows-x64
+            binary: xmrig.exe
 
     steps:
       - name: Checkout
